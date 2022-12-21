@@ -120,7 +120,7 @@ public class KafkaStreamsPaymentIntegrationTest {
 
     @BeforeEach
     public void setUp() {
-        registry.getListenerContainers().stream().forEach(container -> ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic()));
+        registry.getListenerContainers().stream().forEach(container -> ContainerTestUtils.waitForAssignment(container, 1));
         fooRailsReceiver.counter.set(0);
         barRailsReceiver.counter.set(0);
     }
