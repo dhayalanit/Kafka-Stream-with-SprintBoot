@@ -2,11 +2,12 @@ package com.example.kafka_stream_with_sprintboot.processor;
 
 import com.example.kafka_stream_with_sprintboot.events.PaymentEvent;
 import com.example.kafka_stream_with_sprintboot.properties.KafkaStreamsProperties;
+import com.example.kafka_stream_with_sprintboot.serdes.PaymentSerdes;
 import com.example.kafka_stream_with_sprintboot.util.TestEventData;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.core.IsEqual.equalTo;
+import static org.testcontainers.shaded.org.hamcrest.core.IsIterableContaining.hasItems;
 import static org.testcontainers.shaded.org.hamcrest.core.IsNull.nullValue;
 
 import java.util.Properties;
@@ -77,21 +79,21 @@ public class PaymentTopologyTest {
                 "GBP",
                 ACCOUNT_GBP_ABC,
                 ACCOUNT_GBP_DEF,
-                BANK_RAILS_FOO.name());
+                Rails.BANK_RAILS_FOO.name());
         inputTopic.pipeInput(payment1.getPaymentId(), payment1);
         PaymentEvent payment2 = buildPaymentEvent(UUID.randomUUID().toString(),
                 50L,
                 "GBP",
                 ACCOUNT_GBP_ABC,
                 ACCOUNT_GBP_DEF,
-                BANK_RAILS_FOO.name());
+                Rails.BANK_RAILS_FOO.name());
         inputTopic.pipeInput(payment2.getPaymentId(), payment2);
         PaymentEvent payment3 = buildPaymentEvent(UUID.randomUUID().toString(),
                 60L,
                 "GBP",
                 ACCOUNT_GBP_ABC,
                 ACCOUNT_GBP_DEF,
-                BANK_RAILS_FOO.name());
+                Rails.BANK_RAILS_FOO.name());
         inputTopic.pipeInput(payment3.getPaymentId(), payment3);
 
         // Payment on an unsupported rails should be filtered out.
@@ -100,7 +102,7 @@ public class PaymentTopologyTest {
                 "GBP",
                 ACCOUNT_GBP_ABC,
                 ACCOUNT_GBP_DEF,
-                BANK_RAILS_XXX.name());
+                Rails.BANK_RAILS_XXX.name());
         inputTopic.pipeInput(payment4.getPaymentId(), payment4);
 
         // Payment from a USD account will require FX.
@@ -109,7 +111,7 @@ public class PaymentTopologyTest {
                 "USD",
                 ACCOUNT_USD_XYZ,
                 ACCOUNT_GBP_DEF,
-                BANK_RAILS_BAR.name());
+                Rails.BANK_RAILS_BAR.name());
         inputTopic.pipeInput(payment5.getPaymentId(), payment5);
 
         // Assert the outbound rails topics have the expected events.
